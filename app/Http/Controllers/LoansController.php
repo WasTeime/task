@@ -12,32 +12,28 @@ class LoansController extends Controller
 {
     private static int $id = 0;
 
+    private string $dataFilePath = '../storage/app/data.txt';
+
     private function saveNewLoan(Loan $loan)
     {
-
+        file_put_contents($this->dataFilePath, $loan->toJson(), FILE_APPEND);
     }
 
-    private function getLoans()
+    private function getLoansFromFile()
     {
-
-    }
-
-    public function __construct()
-    {
-        $now = new DateTime();
-        json_encode([$this::$id => new Loan("loan1", random_int(1000, 10000000) * 0.85, $now->getTimestamp())]);
-        $this::$id++;
+        return json_decode(file_get_contents($this->dataFilePath));
     }
 
     public function getAllLoans()
     {
-        print_r(sizeof($this->loans));
-        return $this->successResponse($this->loans);
+        return $this->successResponse($this->getLoansFromFile());
     }
 
     public function getLoan($id)
     {
-        return array_key_exists($id, $this->loans) ? $this->successResponse($this->loans[$id]) : $this->errorResponse('Займ с таким id не найден');
+        foreach($this->getLoansFromFile() as $loan) {
+            print_r($this->getLoansFromFile());
+        }
     }
 
     public function createLoan(Request $request)
@@ -49,7 +45,8 @@ class LoansController extends Controller
             ]);
 
             $now = new DateTime();
-            [$this::$id => new Loan($data['name'], $data['sum'], $now->getTimestamp())];
+            $loan = new Loan($this::$id, "loan1", random_int(1000, 10000000) * 0.85, $now->getTimestamp());
+            $this->saveNewLoan($loan);
             $this::$id++;
             return $this->successResponse($this->loans[$this->id - 1]);
         } catch (ValidationException $exception) {
